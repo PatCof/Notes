@@ -1,18 +1,32 @@
 import TrashIcon from "../assets/trash-2.svg";
-import {type MouseEventHandler} from "react";
+import {type MouseEventHandler, useState} from "react";
 import * as motion from "motion/react-client"
+import DeleteModal from '../components/DeleteModal';
 
 type NoteText = {
     Title: string;
     Subtext: string;
-    onDelete: MouseEventHandler;
+    deleteNote:(id:number) => void;
+    Id: number;
 }
 
 
-export default function Note({Title, Subtext, onDelete}: NoteText){
+export default function Note({Title, Subtext, deleteNote, Id}: NoteText){
+  const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+
+  function closeModal(){
+    setShowDeleteModal(false);
+  }
+
+  function onDelete(){
+    setShowDeleteModal(true);
+  }
+
 
     return(
         <>
+        {showDeleteModal && <DeleteModal Id={Id} deleteModal={() => deleteNote(Id)} closeModal={closeModal}></DeleteModal>}
+
             <motion.div 
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ opacity: 1, scale: 1 }}

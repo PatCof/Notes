@@ -4,7 +4,6 @@ import NotebookIcon from "./assets/notebook-pen.svg";
 import CheckIcon from "./assets/check.svg";
 import CancelIcon from "./assets/x.svg";
 import Note from "./components/Note";
-import DeleteModal from './components/DeleteModal';
 type Notes = {
   id: number;
   title: string;
@@ -16,19 +15,8 @@ function App() {
   const [insertInput, setInsertInput] = useState("");
   const [notes, setNotes] = useState<Notes[]>([]);
   const [count, setCount] = useState<number>(0);
-  const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
-
-
   const [showCRUDToggle, setShowCRUDToggle] = useState<boolean>(false);
   const [showNoteToggle, setShowNoteToggle] = useState<boolean>(true);
-
-  function closeModal(){
-    setShowDeleteModal(false);
-  }
-
-  function onDelete(){
-    setShowDeleteModal(true);
-  }
 
   function addNote(event: MouseEvent<HTMLButtonElement>){
     event.preventDefault();
@@ -49,8 +37,7 @@ function App() {
   }
 
   function deleteNote(id:number){
-
-
+    setNotes(notes.filter(n => n.id !== id));
   }
 
   function cancelNote(event: MouseEvent<HTMLButtonElement>){
@@ -84,7 +71,6 @@ function App() {
 
   return (
     <>
-        {showDeleteModal && <DeleteModal deleteModal={() => deleteNote(item.id)} closeModal={closeModal}></DeleteModal>}
 
 
       {/* HEADER */}
@@ -128,7 +114,7 @@ function App() {
         <div className="flex justify-center mb-10">
             <div className="grid grid-cols-5 gap-5">
               {notes && notes.map(item =>(
-                <Note Title={item.title} Subtext={item.subtext} key={item.id} onDelete={onDelete}></Note>
+                <Note Title={item.title} Subtext={item.subtext} key={item.id} Id={item.id} deleteNote={() => deleteNote(item.id)} ></Note>
               ))}
             </div>
           </div>
