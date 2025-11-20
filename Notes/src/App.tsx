@@ -5,12 +5,8 @@ import CheckIcon from "./assets/check.svg";
 import CancelIcon from "./assets/x.svg";
 import Note from "./components/Note";
 import * as motion from "motion/react-client"
+import type {Notes} from "./components/Note";
 
-type Notes = {
-  id: number;
-  title: string;
-  subtext: string;
-}
 
 type newNote = {
   title: string,
@@ -54,7 +50,7 @@ function App() {
       subtext: insertInput,
     }
     try{
-      const response = await fetch("http://localhost:3000/addnotes", {
+      const response = await fetch("http://localhost:3000/addNotes", {
         method: "POST",
         headers:{
           'Content-Type': 'application/json',
@@ -85,13 +81,34 @@ function App() {
       const response = await fetch(`http://localhost:3000/deleteNotes/${id}`, {
         method: "DELETE",
       });
-      const currentNotes = await response.json();
-      setNotes(prev => [...prev, currentNotes]);
     }catch(error){
       console.error("Error deleting note:", error);
     }
     setNotes(notes.filter(n => n.id !== id));
   }
+
+  async function editNote(id: number, title: string, subtext: string){
+    try{
+      const response = await fetch('http://localhost:3000/editNotes', {
+        method: 'PUT',
+        headers: {
+          "Content-Type": 'application/json',
+        },
+        body: JSON.stringify({id: id, title: title, subtext: subtext})
+      });
+      if(!response.ok){
+        throw Error("Network Response was not OK");
+      }
+
+      const editedNotes = await response.json();
+        setNotes(prev => prev.map(n=> (n.id === editedNotes.id ? editedNotes : n)) 
+      );
+
+    }catch(error){
+      console.error("Error editing note:", error);
+    }
+  }
+
 
   function cancelNote(event: MouseEvent<HTMLButtonElement>){
     event.preventDefault();
@@ -179,7 +196,7 @@ function App() {
                   }}
                   key={item.id}
                   >
-                    <Note Title={item.title} Subtext={item.subtext} key={item.id} Id={item.id} deleteNote={() => deleteNote(item.id)} ></Note>
+                    <Note key={item.id} deleteNote={() => deleteNote(item.id)} editNote={()=> editNote(item.id, item.title,item.subtext)} note={item} ></Note>
                 </motion.div>
               ))}
             </div>

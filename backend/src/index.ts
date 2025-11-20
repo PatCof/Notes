@@ -5,8 +5,8 @@ import cors from 'cors';
 
 const app = express();
 const port = 3000;
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
 
 
 interface Note{
@@ -33,7 +33,7 @@ app.get("/notes", async function(req:Request, res:Response){
     }
 })
 
-app.post("/addnotes", async function(req: Request, res:Response){
+app.post("/addNotes", async function(req: Request, res:Response){
     try{
         //title, subtext, position
         const latestNote = await getLatestNote();
@@ -61,6 +61,21 @@ app.delete('/deleteNotes/:id', async function(req: Request, res: Response){
     }catch (error){
         console.error(error);
         res.status(500).json({error: "Failed to delete a Note"});
+    }
+});
+
+app.put('/editNotes', async function(req: Request, res:Response){
+    try{
+        const title = req.body.title;
+        const subtext = req.body.subtext;
+        const id = Number(req.body.id);
+        const updated = await updateNote(title, subtext, id);
+        console.log("SERVER BODY:", req.body);
+
+        res.json(updated);
+    }catch(error){
+        console.error(error);
+        res.status(500).json({error:"Failed to update a Note"});
     }
 });
 

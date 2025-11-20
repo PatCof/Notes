@@ -11,9 +11,11 @@ export async function createNote(title: string, subtext: string, position: numbe
     await db.run('INSERT INTO notes (title, subtext, position) VALUES (?,?,?)', [title, subtext, position]);
 }
 
-export async function updateNote(title: string, subtext: string, position: number, id: number){
+export async function updateNote(title: string, subtext: string, id: number){
     const db = getDB();
-    await db.run('UPDATE notes SET title = ?, subtext = ?, position = ? WHERE id= ?', [title, subtext, position, id]);
+    await db.run('UPDATE notes SET title = ?, subtext = ? WHERE id= ?', [title, subtext, id]);
+    return await db.get('SELECT * FROM notes WHERE id = ?', id);
+
 }
 
 export async function getNotes(){
@@ -33,7 +35,6 @@ export async function deleteNote(id: number){
     const db = getDB();
     await db.run('DELETE FROM notes WHERE id=?', id);
 }
-// deleteNote
 
 
 
