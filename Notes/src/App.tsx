@@ -87,10 +87,10 @@ function App() {
     setNotes(notes.filter(n => n.id !== id));
   }
 
-  async function editNote(id: number, title: string, subtext: string){
+  const editNote = async (id: number, title: string, subtext: string) => {
     try{
       const response = await fetch('http://localhost:3000/editNotes', {
-        method: 'PUT',
+        method: 'PATCH',
         headers: {
           "Content-Type": 'application/json',
         },
@@ -99,9 +99,9 @@ function App() {
       if(!response.ok){
         throw Error("Network Response was not OK");
       }
-
       const editedNotes = await response.json();
-        setNotes(prev => prev.map(n=> (n.id === editedNotes.id ? editedNotes : n)) 
+      console.log("Backend returned:", editedNotes);
+      setNotes(prev => prev.map(n=> (n.id === editedNotes.id ? editedNotes : n)) 
       );
 
     }catch(error){
@@ -196,7 +196,7 @@ function App() {
                   }}
                   key={item.id}
                   >
-                    <Note key={item.id} deleteNote={() => deleteNote(item.id)} editNote={()=> editNote(item.id, item.title,item.subtext)} note={item} ></Note>
+                    <Note key={item.id} deleteNote={() => deleteNote(item.id)} editNote={editNote} note={item} ></Note>
                 </motion.div>
               ))}
             </div>

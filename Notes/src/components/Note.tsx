@@ -1,5 +1,5 @@
 import TrashIcon from "../assets/trash-2.svg";
-import {useState, type ChangeEvent} from "react";
+import {useState, useEffect, type ChangeEvent} from "react";
 import * as motion from "motion/react-client"
 import DeleteModal from '../components/DeleteModal';
 import { AnimatePresence } from "motion/react";
@@ -27,7 +27,6 @@ export default function Note({deleteNote, editNote, note}: NoteText){
   const [titleInput, setTitleInput] = useState<string>(note.title);
   const [subtextInput, setSubtextInput] = useState<string>(note.subtext);
 
-
   function closeModal(){
     setShowDeleteModal(false);
   }
@@ -53,9 +52,9 @@ export default function Note({deleteNote, editNote, note}: NoteText){
   }
 
   function setTitle(event : ChangeEvent<HTMLInputElement>){
-    if (event) setTitleInput(event.target.value);
-    if (event) console.log(titleInput);
-
+    const newValue = event.target.value;
+    console.log(newValue);
+    if (event) setTitleInput(newValue);
   }
 
   function setSubtext(event: ChangeEvent<HTMLInputElement>){
@@ -68,6 +67,7 @@ export default function Note({deleteNote, editNote, note}: NoteText){
         <>
         {showDeleteModal && <DeleteModal Id={note.id} deleteModal={() => deleteNote(note.id)} closeModal={closeModal}></DeleteModal>}
             <div className="relative bg-stone-100 h-70 w-50 rounded-2xl shadow-xl/30 wrap-break-word  mt-10">
+            <form>
                 <div className="flex justify-center font-bold">
                     {isEditing ?
                         <input value={titleInput} onChange={setTitle} type="text" className="mt-2 text-2xl w-50 text-center" placeholder={note.title}></input>
@@ -82,12 +82,12 @@ export default function Note({deleteNote, editNote, note}: NoteText){
                         <p className="m-3 text-md">{note.subtext}</p>
                     }
                 </div>
-                
+              </form>
                 <div className="absolute bottom-0 right-0 translate-5">            
                     {isEditing ?
                         <div>
                             <button onClick={cancelEdit} className="bg-red-400 rounded-full p-3 h-10 w-10"><img src={CancelIcon}></img></button>
-                            <button onClick={()=> {editNote(note.id, note.title, note.subtext); 
+                            <button onClick={()=> {editNote(note.id, titleInput, subtextInput); 
                                                             setIsEditing(false);}}
                               className="bg-green-400 rounded-full p-3 h-10 w-10"><img src={CheckIcon}></img></button>
                         </div>
@@ -97,7 +97,6 @@ export default function Note({deleteNote, editNote, note}: NoteText){
                             <button onClick={onDelete} className="bg-amber-200 rounded-full p-3 h-10 w-10"><img src={TrashIcon}></img></button>
                         </div>
                     }
-
                 </div>
             </div>
         </>

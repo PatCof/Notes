@@ -64,7 +64,7 @@ app.delete('/deleteNotes/:id', async function(req: Request, res: Response){
     }
 });
 
-app.put('/editNotes', async function(req: Request, res:Response){
+app.patch('/editNotes', async function(req: Request, res:Response){
     try{
         const title = req.body.title;
         const subtext = req.body.subtext;
