@@ -1,6 +1,6 @@
 import express, {Request, Response} from 'express';
 import {initDB} from './database';
-import {createDB, createNote, updateNote, getNotes, deleteNote, getLatestNote} from './notes.model';
+import {createDB, createNote, updateNote, getNotes, deleteNote, getLatestNote, getSelectedNotes} from './notes.model';
 import cors from 'cors';
 
 const app = express();
@@ -37,7 +37,8 @@ app.post("/addNotes", async function(req: Request, res:Response){
     try{
         //title, subtext, position
         const latestNote = await getLatestNote();
-        const newID = latestNote.id ? latestNote.id + 1 : 0;
+        let newID = 0
+        if (latestNote !== undefined) { newID = latestNote.id ? latestNote.id + 1 : 0;}
         await createNote(req.body.title, req.body.subtext, newID);
 
         res.status(201).json({
@@ -70,12 +71,25 @@ app.patch('/editNotes', async function(req: Request, res:Response){
         const subtext = req.body.subtext;
         const id = Number(req.body.id);
         const updated = await updateNote(title, subtext, id);
-        console.log("SERVER BODY:", req.body);
-
         res.json(updated);
     }catch(error){
         console.error(error);
         res.status(500).json({error:"Failed to update a Note"});
+    }
+});
+
+app.get("/searchNotes", async function(req:Request, res:Response){
+    try{
+        console.log(typeof req.query.string);
+        if(typeof req.query.substring === "string"){
+            console.log(req.query.substring);
+            const substring = req.query.substring;
+            const selectedNotes = await getSelectedNotes(substring);
+            res.json(selectedNotes);
+        }
+    }catch(error){
+        console.error(error);
+        res.status(500).json({error: "Failed to fetch Selected Notes"});
     }
 });
 

@@ -1,12 +1,11 @@
-import { useState, useEffect, type ChangeEvent, type MouseEvent} from 'react';
+import { useState, useEffect, type ChangeEvent, type MouseEvent, type FormEvent} from 'react';
 import './App.css';
 import NotebookIcon from "./assets/notebook-pen.svg";
 import CheckIcon from "./assets/check.svg";
 import CancelIcon from "./assets/x.svg";
 import Note from "./components/Note";
-import * as motion from "motion/react-client"
 import type {Notes} from "./components/Note";
-
+import { AnimatePresence } from 'motion/react';
 
 type newNote = {
   title: string,
@@ -17,9 +16,11 @@ function App() {
   const [titleInput, setTitleInput] = useState("");
   const [insertInput, setInsertInput] = useState("");
   const [notes, setNotes] = useState<Notes[]>([]);
-  const [count, setCount] = useState<number>(0);
   const [showCRUDToggle, setShowCRUDToggle] = useState<boolean>(false);
   const [showNoteToggle, setShowNoteToggle] = useState<boolean>(true);
+  const [error, setError] = useState<string>("Both Fields Must be Filled");
+  const [searchInput, setSearchInput] = useState<string>("");
+
 
   useEffect(()=>{
     async function showNotes(){
@@ -32,7 +33,6 @@ function App() {
 
         const data = await response.json();
         setNotes(data);
-        setCount(data.id);
 
       }catch(error){
         console.error(error);
@@ -45,6 +45,7 @@ function App() {
 
   async function addNote(event: MouseEvent<HTMLButtonElement>){
     event.preventDefault();
+    if (titleInput.trim().length > 0 && insertInput.trim().length > 0){
     const newNote: newNote = {
       title: titleInput,
       subtext: insertInput,
@@ -68,17 +69,19 @@ function App() {
         if(showCRUDToggle && !showNoteToggle){
           setTitleInput("");
           setInsertInput("");
+          setError("Both Fields Must be Filled");
           setShowNoteToggle(true);
           setShowCRUDToggle(false);
         }
     }catch(error){
         console.error("Error adding note:", error);
       };
-    }
-  
+    } 
+  }
+
   async function deleteNote(id:number){
     try{
-      const response = await fetch(`http://localhost:3000/deleteNotes/${id}`, {
+      await fetch(`http://localhost:3000/deleteNotes/${id}`, {
         method: "DELETE",
       });
     }catch(error){
@@ -118,6 +121,26 @@ function App() {
     }
   }
 
+  async function searchNotes(substring: string){
+    try{
+      const  url = new URL("http://localhost:3000/searchNotes");
+      const searchparams =  new URLSearchParams({"substring": substring});
+
+      url.search = searchparams.toString();
+      const response = await fetch(url);
+      
+      if(!response.ok){
+        throw Error("Network Response Error");
+      }
+      let selected = await response.json(); 
+
+      setNotes(selected);
+
+    }catch(error){
+      console.error(error);
+    }
+  }
+
   function setTitle(event:ChangeEvent<HTMLInputElement>){
     if(event){
       setTitleInput(event.target.value);
@@ -139,6 +162,14 @@ function App() {
     }
   }
 
+  function setInput(event: ChangeEvent<HTMLInputElement>){
+    if(event){
+      setSearchInput(event.target.value);
+    }
+  }
+  
+
+  
   return (
     <>
 
@@ -150,7 +181,7 @@ function App() {
 
         </div>
             <div className="w-full flex justify-center translate-y-[-125%]">
-              <input placeholder="Search...." className="bg-[url('./assets/search.svg')] rounded-lg border-2 border-sky-700 bg-right bg-no-repeat bg-sky-50 w-200 h-8 text-lg pl-2 pr-6">
+              <input onChange={(e)=>{setInput(e); searchNotes(e.target.value)}} value={searchInput} placeholder="Search...." className="bg-[url('./assets/search.svg')] rounded-lg border-2 border-sky-700 bg-right bg-no-repeat bg-sky-50 w-200 h-8 text-lg pl-2 pr-6">
             </input>
         </div>
       </div>
@@ -168,10 +199,18 @@ function App() {
             { showCRUDToggle &&
             <div className="none w-150 bg-sky-50 rounded">
               <form method="post">
-                <input value={titleInput} onChange={setTitle}  placeholder="Title" className="active:border-b focus:border-b border-b-slate-500 hover:border-b focus:outline-none w-142 h-10 text-lg ml-4 mt-4"> 
+                <input required={true} value={titleInput} onChange={(e)=> {setTitle(e); 
+                  if(e.target.value.trim().length > 0){ setError("")
+                  }else{ setError("Both Fields Must be Filled")}  }}  
+                  placeholder="Title" className="active:border-b focus:border-b border-b-slate-500 hover:border-b focus:outline-none w-142 h-10 text-lg ml-4 mt-4"> 
                 </input>
-                <textarea value={insertInput} onChange={setNote} rows={3} placeholder="Take Notes..." className="focus:border-b border-b-slate-500 hover:border-b  focus:outline-none text-lg mt-5 ml-4 w-142"> 
+                <textarea required={true} value={insertInput} onChange={(e)=> {setNote(e); if (e.target.value.trim().length > 0){ setError("")
+                  }else{ setError("Both Fields Must be Filled")} }} rows={3} placeholder="Take Notes..." className="focus:border-b border-b-slate-500 hover:border-b  focus:outline-none text-lg mt-5 ml-4 w-142"> 
                 </textarea>
+                {error && 
+                  <div className="text-red-700 flex justify-center">
+                    {error}
+                  </div>}
                 <div className="flex justify-end h-5  translate-x-5">
                   <button onClick={cancelNote} className="bg-red-400 rounded-full p-3 h-10 w-10"><img src={CancelIcon}></img></button>
                   <button onClick={addNote} className="bg-green-400 rounded-full p-3 h-10 w-10"><img src={CheckIcon}></img></button>
@@ -179,26 +218,18 @@ function App() {
               </form>
           </div>
             }
-
         </div>
+
 
       {/* NOTES */}
         <div className="flex justify-center mb-10">
             <div className="grid grid-cols-5 gap-5">
-              {notes && notes.map(item =>(
-                <motion.div 
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity:0, scale:0 }}
-                    transition={{
-                        duration: 0.4,
-                        scale: { type: "spring", visualDuration: 0.4, bounce: 0.5 },
-                  }}
-                  key={item.id}
-                  >
+            <AnimatePresence>       
+              {notes && notes.map(item =>(                
                     <Note key={item.id} deleteNote={() => deleteNote(item.id)} editNote={editNote} note={item} ></Note>
-                </motion.div>
               ))}
+            </AnimatePresence>
+
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import TrashIcon from "../assets/trash-2.svg";
-import {useState, useEffect, type ChangeEvent} from "react";
+import {useState, type ChangeEvent} from "react";
 import * as motion from "motion/react-client"
 import DeleteModal from '../components/DeleteModal';
 import { AnimatePresence } from "motion/react";
@@ -26,7 +26,7 @@ export default function Note({deleteNote, editNote, note}: NoteText){
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [titleInput, setTitleInput] = useState<string>(note.title);
   const [subtextInput, setSubtextInput] = useState<string>(note.subtext);
-
+  const [pendingDelete, setPendingDelete] = useState<number | null>(null);
   function closeModal(){
     setShowDeleteModal(false);
   }
@@ -34,7 +34,6 @@ export default function Note({deleteNote, editNote, note}: NoteText){
   function onDelete(){
     setShowDeleteModal(true);
   }
-
 
   function cancelEdit(){
     if(isEditing){
@@ -61,23 +60,38 @@ export default function Note({deleteNote, editNote, note}: NoteText){
     if (event) setSubtextInput(event.target.value);
   }
 
-
+  function confirmDelete(){
+    setPendingDelete(note.id);
+    setShowDeleteModal(false);
+  }
 
     return(
         <>
-        {showDeleteModal && <DeleteModal Id={note.id} deleteModal={() => deleteNote(note.id)} closeModal={closeModal}></DeleteModal>}
+        <AnimatePresence onExitComplete={() => {if(pendingDelete) deleteNote(pendingDelete); setPendingDelete(null);}}>
+        {showDeleteModal && <DeleteModal Id={note.id}  deleteModal={confirmDelete} closeModal={closeModal}></DeleteModal>}
+        </AnimatePresence>
+        <motion.div 
+                    initial={{ opacity:0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{opacity:0, scale:0 }}
+                    transition={{
+                        duration: 0.2,
+                        scale: { type: "spring", visualDuration: 0.4, bounce: 0.5 },
+                  }}
+                  key={note.id}
+                  >
             <div className="relative bg-stone-100 h-70 w-50 rounded-2xl shadow-xl/30 wrap-break-word  mt-10">
             <form>
                 <div className="flex justify-center font-bold">
                     {isEditing ?
-                        <input value={titleInput} onChange={setTitle} type="text" className="mt-2 text-2xl w-50 text-center" placeholder={note.title}></input>
+                        <input required value={titleInput} onChange={setTitle} type="text" className="mt-2 text-2xl w-50 text-center" placeholder={note.title}></input>
                         :
                         <h1 className="mt-2 text-2xl underline">{note.title}</h1>
                     }
                 </div>
                 <div>
                     {isEditing ?
-                        <input value={subtextInput} onChange={setSubtext} type="text" className="m-3 text-md w-45" placeholder={note.subtext}></input>
+                        <input required value={subtextInput} onChange={setSubtext} type="text" className="m-3 text-md w-45" placeholder={note.subtext}></input>
                         :
                         <p className="m-3 text-md">{note.subtext}</p>
                     }
@@ -99,6 +113,7 @@ export default function Note({deleteNote, editNote, note}: NoteText){
                     }
                 </div>
             </div>
+          </motion.div>
         </>
     )
 }

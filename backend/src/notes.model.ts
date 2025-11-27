@@ -36,6 +36,10 @@ export async function deleteNote(id: number){
     await db.run('DELETE FROM notes WHERE id=?', id);
 }
 
-
+export async function getSelectedNotes(substring: string){
+    const db = getDB();
+    const search = `%${substring}%`;
+    return await db.all('SELECT * FROM notes WHERE title LIKE ? OR subtext LIKE ?', [search, search]);
+}
 
 
